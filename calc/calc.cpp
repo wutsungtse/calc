@@ -1,4 +1,4 @@
-﻿// calc.cpp : 此檔案包含 'main' 函式。程式會於該處開始執行及結束執行。
+﻿// calc.cpp : 此檔案包含 "main" 函式。程式會於該處開始執行及結束執行。
 
 /*
 Steps
@@ -13,6 +13,7 @@ Steps
 #include <queue>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -33,43 +34,51 @@ vector<Token> tokenize(string expr)
 {
 	vector<Token> tokens;
 	for (int i=0; i<expr.size(); i++) {
-		Token tok;
-		if (expr[i] == ' ') {
-			continue;
-		}
-		else if (expr[i] == '+')
+		if (expr[i] == ' ') continue;
+		if (expr[i] == '+')
 		{
-			tok.type = TokenType::Plus;
-			tok.lexeme = '+';
-			tok.precedence = 1;
+			Token tok;
+			tok.type = TokenType::Plus; tok.lexeme = "+"; tok.precedence = 1;
+			tokens.push_back(tok);
 		}
 		else if (expr[i] == '*')
 		{
-			tok.type = TokenType::Multiply;
-			tok.lexeme = "*";
-			tok.precedence = 2;
+			Token tok;
+			tok.type = TokenType::Multiply; tok.lexeme = "*"; tok.precedence = 2;
+			tokens.push_back(tok);
 		}
 		else if (expr[i] == '/')
 		{
-			tok.type = TokenType::Divide;
-			tok.lexeme = "/";
-			tok.precedence = 2;
+			Token tok; tok.type = TokenType::Divide; tok.lexeme = "/"; tok.precedence = 2;
+			tokens.push_back(tok);
 		}
 		else if (expr[i] == '(')
 		{
-			tok.type = TokenType::LParen;
-			tok.lexeme = "(";
+			Token tok;
+			tok.type = TokenType::LParen; tok.lexeme = "(";
+			tokens.push_back(tok);
 		}
 		else if (expr[i] == ')')
 		{
-			tok.type = TokenType::RParen;
-			tok.lexeme = ")";
+			Token tok;
+			tok.type = TokenType::RParen; tok.lexeme = ")";
+			tokens.push_back(tok);
 		}
 		else if (expr[i] == '-')
 		{
-			tok.type = TokenType::Minus;
-			tok.lexeme = "-";
-			tok.precedence = 1;
+			Token tok;
+			if (tokens.empty() || ((tokens.back().type != TokenType::Number) && tokens.back().type != TokenType::RParen))
+			{ 
+				Token new_token;
+				new_token.type = TokenType::Number; new_token.lexeme = "-1"; new_token.value = -1;
+				tokens.push_back(new_token);
+
+				tok.type = TokenType::Multiply; tok.lexeme = "*"; tok.precedence = 2;
+			}
+			else {
+				tok.type = TokenType::Minus; tok.lexeme = "-"; tok.precedence = 1;
+			}
+			tokens.push_back(tok);
 		}
 		else if (isdigit(expr[i]))
 		{
@@ -81,11 +90,10 @@ vector<Token> tokenize(string expr)
 				j++;
 			}
 			i = j-1;
-			tok.type = TokenType::Number;
-			tok.lexeme = num;
-			tok.value = stoi(num);
+			Token tok;
+			tok.type = TokenType::Number; tok.lexeme = num; tok.value = stoi(num);
+			tokens.push_back(tok);
 		}
-		tokens.push_back(tok);
 	}
 	return tokens;
 }
@@ -158,10 +166,6 @@ double evaluatePostfix(queue<Token> postfix_tokens)
 		}
 		else
 		{
-			if (myStack.size() < 2) {
-				cerr << "Error: Not enough operands in stack for operation.\n";
-				return 0.0;
-			}
 			Token right = myStack.top();
 			myStack.pop();
 			Token left = myStack.top();
@@ -181,10 +185,6 @@ double evaluatePostfix(queue<Token> postfix_tokens)
 			}
 			else if (token.type == TokenType::Divide)
 			{
-				if (right.value == 0) {
-					cerr << "Error: Division by zero.\n";
-					return 0.0;
-				}
 				result = left.value / right.value;
 			}
 			Token res_token;
@@ -201,10 +201,12 @@ double evaluatePostfix(queue<Token> postfix_tokens)
 		while (true) {
 			string expr;
 			cout << "Enter Expression: \n";
-			cin >> expr;
+			getline(cin, expr);
 
 			vector<Token> tokens = tokenize(expr);
-			queue<Token> postfix_tokens = infixToPostfix(tokens);
+
+			vector<Token> new_tokens = tokens;
+			queue<Token> postfix_tokens = infixToPostfix(new_tokens);
 
 			cout << "\nInfix Expression:\n";
 
