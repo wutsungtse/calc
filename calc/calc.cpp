@@ -73,7 +73,7 @@ vector<Token> tokenize(string expr)
 				new_token.type = TokenType::Number; new_token.lexeme = "-1"; new_token.value = -1;
 				tokens.push_back(new_token);
 
-				tok.type = TokenType::Multiply; tok.lexeme = "*"; tok.precedence = 2;
+				tok.type = TokenType::Multiply; tok.lexeme = "*"; tok.precedence = 10;
 			}
 			else {
 				tok.type = TokenType::Minus; tok.lexeme = "-"; tok.precedence = 1;
@@ -185,7 +185,14 @@ double evaluatePostfix(queue<Token> postfix_tokens)
 			}
 			else if (token.type == TokenType::Divide)
 			{
-				result = left.value / right.value;
+				if (right.value == 0)
+				{
+					std::cerr << "\nError: Division by zero.\n";
+				}
+				else
+				{
+					result = left.value / right.value;
+				}
 			}
 			Token res_token;
 			res_token.type = TokenType::Number;
@@ -206,25 +213,21 @@ double evaluatePostfix(queue<Token> postfix_tokens)
 			vector<Token> tokens = tokenize(expr);
 
 			vector<Token> new_tokens = tokens;
-			queue<Token> postfix_tokens = infixToPostfix(new_tokens);
+			queue<Token> postfix_tokens;
 
+			postfix_tokens = infixToPostfix(new_tokens);
 			cout << "\nInfix Expression:\n";
-
 			for (int i = 0; i < tokens.size(); i++) {
 				Token t = tokens[i];
 				cout << " " << t.lexeme;
 			}
-
 			cout << "\n\nPostfix Expression:\n";
-
 			queue<Token> p_tokens = postfix_tokens;
-
 			while (!postfix_tokens.empty()) {
 				Token t = postfix_tokens.front();
 				cout << " " << t.lexeme;
 				postfix_tokens.pop();
 			}
-
 			double result = evaluatePostfix(p_tokens);
 			cout << "\n\nResult: " << result << "\n";
 			cout << "\n\n";
